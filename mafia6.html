@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>마피아 게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700;900&family=Noto+Sans+KR:wght@400;500;700;900&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deepest:#0c0a08;
+    --bg-panel:#1b1613;
+    --bg-panel-2:#241d19;
+    --bg-panel-3:#150f0c;
+    --accent-blood:#8c1f28;
+    --accent-blood-bright:#c23947;
+    --accent-gold:#c9a24b;
+    --accent-gold-bright:#e6c579;
+    --accent-police:#4a7896;
+    --accent-doctor:#4a8c6f;
+    --accent-spy:#8a5cc9;
+    --text-light:#ede6d6;
+    --text-muted:#a6998a;
+    --text-faint:#6e6255;
+    --border-soft: rgba(201,162,75,0.22);
+    --font-display: 'Noto Serif KR', serif;
+    --font-body: 'Noto Sans KR', sans-serif;
+    --font-mono: 'Special Elite', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 900px 600px at 50% -10%, rgba(201,162,75,0.10), transparent 60%),
+      radial-gradient(ellipse 1200px 900px at 50% 40%, #1a1512 0%, #0c0a08 70%);
+    color:var(--text-light);
+    font-family:var(--font-body);
+    position:relative;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; z-index:1;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size:3px 3px;
+    mix-blend-mode:overlay;
+    opacity:0.5;
+  }
+  body::after{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    box-shadow: inset 0 0 220px 60px rgba(0,0,0,0.75);
+  }
+  .app{
+    position:relative; z-index:2;
+    width:100%; max-width:880px; margin:0 auto;
+    padding:22px 18px 60px;
+    min-height:100vh; min-width:0;
+    display:flex; flex-direction:column;
+  }
+  .topbar{
+    display:flex; align-items:center; justify-content:flex-end;
+    padding-bottom:16px; margin-bottom:22px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .topbar-right{ display:flex; align-items:center; gap:10px; }
+  .round-badge{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:2px;
+    color:var(--accent-gold); border:1px solid var(--border-soft);
+    padding:6px 12px; border-radius:2px; background:rgba(201,162,75,0.06);
+    white-space:nowrap;
+  }
+  .reset-btn{
+    background:none; border:1px solid var(--text-faint); color:var(--text-faint);
+    font-family:var(--font-body); font-size:11px; padding:6px 10px; border-radius:2px;
+    cursor:pointer; transition:all .15s;
+  }
+  .reset-btn:hover{ border-color:var(--accent-blood-bright); color:var(--accent-blood-bright); }
+
+  .stage{ flex:1; display:flex; align-items:flex-start; justify-content:center; padding-top:10px;}
+  .card{
+    width:100%; max-width:640px;
+    background:linear-gradient(180deg, var(--bg-panel), var(--bg-panel-3));
+    border:1px solid var(--border-soft);
+    border-radius:6px;
+    padding:34px 30px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.4);
+    animation: riseIn .5s cubic-bezier(.2,.8,.2,1);
+    position:relative;
+  }
+  @keyframes riseIn{ from{opacity:0; transform:translateY(14px) scale(.985);} to{opacity:1; transform:none;} }
+
+  .eyebrow{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:3px;
+    color:var(--accent-gold); text-transform:uppercase; margin-bottom:10px;
+  }
+  .eyebrow.blood{ color:var(--accent-blood-bright); }
+  h1.title{
+    font-family:var(--font-display); font-weight:900; font-size:28px;
+    margin:0 0 12px; line-height:1.3; color:var(--text-light);
+  }
+  p.desc{ color:var(--text-muted); line-height:1.7; font-size:15px; margin:0 0 22px; }
+  .divider{ height:1px; background:var(--border-soft); margin:22px 0; }
+
+  .btn{
+    font-family:var(--font-body); font-weight:700; font-size:15px;
+    padding:13px 22px; border-radius:3px; border:1px solid var(--accent-gold);
+    background:linear-gradient(180deg, rgba(201,162,75,0.18), rgba(201,162,75,0.05));
+    color:var(--accent-gold-bright); cursor:pointer; letter-spacing:0.3px;
+    transition:transform .12s, box-shadow .12s, background .12s;
+  }
+  .btn:hover{ transform:translateY(-1px); box-shadow:0 8px 20px -8px rgba(201,162,75,0.5); background:rgba(201,162,75,0.22); }
+  .btn:active{ transform:translateY(0); }
+  .btn.wide{ width:100%; text-align:center; display:block; }
+  .btn.ghost{ background:transparent; border-color:var(--text-faint); color:var(--text-muted); }
+  .btn.ghost:hover{ border-color:var(--text-muted); box-shadow:none; }
+  .btn:disabled{ opacity:0.35; cursor:not-allowed; transform:none; box-shadow:none; }
+
+  .candidate-row {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .num-btn{
+    min-width: 80px;
+    flex: 0 1 auto;
+    height:50px; border-radius:4px; border:1px solid var(--border-soft);
+    background:var(--bg-panel-2); color:var(--text-light); font-family:var(--font-mono);
+    font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:all .12s; white-space:nowrap; padding:0 12px;
+  }
+  .num-btn:hover{ border-color:var(--accent-gold); background:rgba(201,162,75,0.12); transform:translateY(-2px); }
+  .num-btn:disabled{ opacity:0.25; cursor:not-allowed; text-decoration:line-through; transform:none; }
+  .num-btn.selected{
+    border-color:var(--accent-gold-bright); background:rgba(201,162,75,0.22);
+    box-shadow:0 0 0 2px rgba(201,162,75,0.35), 0 8px 18px -8px rgba(201,162,75,0.5);
+    color:var(--accent-gold-bright); font-weight:900;
+  }
+  .pick-status{
+    margin-top:14px; font-size:12.5px; color:var(--text-faint); text-align:center;
+  }
+  .pick-status b{ color:var(--accent-gold-bright); }
+
+  .assign-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    justify-content:center;
+    gap:12px;
+    margin-top:8px;
+  }
+  @media (max-width: 480px) {
+    .assign-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .assign-tile{
+    width:100%; border:1px solid var(--border-soft); border-radius:4px; padding:16px 10px;
+    background:var(--bg-panel-2); text-align:center; cursor:pointer; transition:all .15s;
+  }
+  .assign-tile:hover{ border-color:var(--accent-gold); background:rgba(201,162,75,0.10); }
+  .assign-tile .n{ font-family:var(--font-mono); font-size:22px; color:var(--accent-gold-bright); }
+  .assign-tile .lbl{ font-size:12px; color:var(--text-faint); margin-top:4px; }
+  
+  .assign-tile.checked{ 
+    border-color:rgba(255,255,255,0.1); 
+    background:rgba(0,0,0,0.3);
+    cursor:not-allowed;
+    opacity: 0.6;
+  }
+  .assign-tile.checked .n{ color:var(--text-faint); }
+  .assign-tile.checked .lbl{ color:var(--text-faint); }
+
+  .overlay{
+    position:fixed; inset:0; z-index:50; background:rgba(6,4,3,0.86);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    animation:fadeIn .2s ease;
+  }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+
+  .warning-card{
+    width:100%; max-width:420px; text-align:center; position:relative;
+    background:linear-gradient(180deg, #3a1210, #1c0906);
+    border:4px solid #ffcc00; border-radius:14px; padding:32px 26px 28px;
+    box-shadow:0 0 0 2px #ff4d4d, 0 40px 80px -20px rgba(0,0,0,0.9), 0 0 50px 4px rgba(255,204,0,0.35);
+    animation: warningPop .35s cubic-bezier(.2,.9,.25,1.2), warningPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes warningPop{ from{opacity:0; transform:scale(.8);} to{opacity:1; transform:none;} }
+  @keyframes warningPulse{
+    0%,100%{ box-shadow:0 0 0 2px #ff4d4d, 0 40px 80px -20px rgba(0,0,0,0.9), 0 0 50px 4px rgba(255,204,0,0.35); }
+    50%{ box-shadow:0 0 0 2px #ffcc00, 0 40px 80px -20px rgba(0,0,0,0.9), 0 0 70px 12px rgba(255,204,0,0.55); }
+  }
+  .warning-icon{ font-size:56px; line-height:1; margin-bottom:10px; filter:drop-shadow(0 6px 14px rgba(0,0,0,0.6)); }
+  .warning-lead{
+    font-family:var(--font-body); font-weight:700; font-size:15px; line-height:1.5;
+    color:#ffb37a; margin:0 0 10px; word-break:keep-all; word-wrap:break-word;
+  }
+  .warning-title{
+    font-family:var(--font-display); font-weight:900; font-size:22px; line-height:1.5;
+    color:#fff3b0; margin:0 0 26px; text-shadow:0 2px 6px rgba(0,0,0,0.6);
+    word-break:keep-all; word-wrap:break-word;
+  }
+  .warning-btns{ display:flex; gap:10px; flex-direction:column; }
+  .btn.warning-yes{
+    background:linear-gradient(180deg, #ffdd55, #ffb300); border:2px solid #fff3b0;
+    color:#3a1210; font-size:17px; font-weight:900;
+  }
+  .btn.warning-yes:hover{ box-shadow:0 8px 20px -8px rgba(255,204,0,0.7); }
+  .btn.warning-no{
+    background:transparent; border:2px solid #a6998a; color:#e6ddcf; font-size:15px; font-weight:700;
+  }
+  .pw-card{ animation: warningPop .35s cubic-bezier(.2,.9,.25,1.2); }
+  .pw-input{
+    width:100%; box-sizing:border-box; padding:12px 14px; border-radius:8px;
+    border:2px solid #ffcc00; background:rgba(0,0,0,0.35); color:#fff3b0;
+    font-size:20px; letter-spacing:6px; text-align:center; font-family:var(--font-mono);
+    outline:none;
+  }
+  .pw-input:focus{ border-color:#fff3b0; }
+  .pw-error{ color:#ff8a80; font-size:13px; font-weight:700; margin-top:10px; }
+  .intro-role-row{
+    display:flex; gap:12px; align-items:flex-start;
+    padding:12px 4px; border-bottom:1px solid var(--border-soft);
+  }
+  .intro-role-row:first-of-type{ margin-top:6px; }
+  .intro-role-icon{ font-size:26px; line-height:1.3; flex-shrink:0; width:32px; text-align:center; }
+  .intro-role-body{ flex:1; }
+  .intro-role-name{ font-family:var(--font-display); font-weight:900; font-size:15.5px; margin-bottom:4px; }
+  .intro-role-qty{ font-family:var(--font-mono); font-size:12px; color:var(--text-faint); font-weight:400; }
+  .intro-role-desc{ font-size:13px; line-height:1.6; color:var(--text-light); opacity:0.9; }
+  .intro-rule-block{ margin-bottom:14px; }
+  .intro-rule-title{ font-family:var(--font-display); font-weight:900; font-size:14.5px; color:var(--accent-gold-bright); margin-bottom:4px; }
+  .intro-rule-desc{ font-size:13px; line-height:1.6; color:var(--text-light); opacity:0.9; }
+  .transition-banner{
+    margin:14px 0; padding:16px 18px; border-radius:10px; text-align:center;
+    background:linear-gradient(180deg, #3a1210, #1c0906);
+    border:3px solid #ffcc00; color:#fff3b0; font-weight:800; font-size:15px; line-height:1.6;
+    box-shadow:0 0 0 2px #ff4d4d, 0 20px 40px -16px rgba(0,0,0,0.7);
+    animation: warningPulse 1.6s ease-in-out infinite;
+  }
+  .role-card{
+    width:100%; max-width:380px; text-align:center; position:relative;
+    background:linear-gradient(180deg, #241d19, #150f0c);
+    border:1px solid var(--accent-gold); border-radius:8px; padding:38px 26px 30px;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.5), 0 40px 80px -20px rgba(0,0,0,0.85), 0 0 60px -10px rgba(201,162,75,0.25);
+    animation: cardPop .38s cubic-bezier(.2,.9,.25,1.2);
+  }
+  @keyframes cardPop{ from{opacity:0; transform:scale(.82) rotateX(12deg);} to{opacity:1; transform:none;} }
+  .stamp{
+    position:absolute; top:14px; right:14px; font-family:var(--font-mono);
+    font-size:10px; letter-spacing:2px; color:var(--accent-blood-bright);
+    border:1px solid var(--accent-blood-bright); padding:3px 7px; border-radius:2px;
+    transform:rotate(6deg); opacity:0.75;
+  }
+  .role-icon{ font-size:52px; line-height:1; margin-bottom:14px; filter:drop-shadow(0 6px 14px rgba(0,0,0,0.6)); }
+  .role-name{ font-family:var(--font-display); font-weight:900; font-size:26px; margin:0 0 8px; }
+  .role-name.mafia{ color:var(--accent-blood-bright); }
+  .role-name.police{ color:var(--accent-police); }
+  .role-name.doctor{ color:var(--accent-doctor); }
+  .role-name.citizen{ color:var(--accent-gold-bright); }
+  .role-name.spy{ color:var(--accent-spy); }
+  .role-flavor{ color:var(--text-muted); font-size:13.5px; line-height:1.7; margin:0 0 22px; }
+
+  .big-reveal{
+    text-align:center; padding:30px 10px 10px;
+    animation: revealPop .5s cubic-bezier(.2,.9,.25,1.2);
+  }
+  @keyframes revealPop{
+    0%{opacity:0; transform:scale(.6) rotate(-6deg);}
+    60%{opacity:1; transform:scale(1.08) rotate(2deg);}
+    100%{opacity:1; transform:scale(1) rotate(0);}
+  }
+  .big-reveal .icon{ font-size:96px; line-height:1; margin-bottom:18px; filter:drop-shadow(0 10px 24px rgba(0,0,0,0.7)); }
+  .big-reveal .role-big{ font-family:var(--font-display); font-weight:900; font-size:44px; margin:0 0 6px; letter-spacing:1px; }
+  .big-reveal .sub-line{ font-family:var(--font-mono); font-size:13px; letter-spacing:2px; color:var(--text-faint); text-transform:uppercase; }
+
+  .shield{ text-align:center; padding:16px 6px; }
+  .shield .lock{ font-size:44px; margin-bottom:16px; opacity:0.9; }
+  .shield .who{ font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--accent-gold-bright); margin-bottom:8px;}
+  .warn-line{ font-size:12.5px; color:var(--text-faint); letter-spacing:0.5px; margin-bottom:24px; }
+
+  .feedback-box{
+    border:1px solid var(--border-soft); border-radius:4px; padding:16px 18px;
+    background:var(--bg-panel-2); margin:18px 0 22px; font-size:15px; line-height:1.6;
+  }
+  .feedback-box.good{ border-color:var(--accent-doctor); color:#d8f2e5; }
+  .feedback-box.bad{ border-color:var(--accent-blood); color:#f2d9db; }
+  .feedback-box.neutral{ border-color:var(--border-soft); color:var(--text-muted); }
+
+  .roster{
+    position:sticky; top:0; z-index:30;
+    margin:0 -18px 18px; padding:12px 18px;
+    display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+    background:rgba(15,11,9,0.92); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--border-soft);
+    box-shadow:0 12px 24px -16px rgba(0,0,0,0.6);
+  }
+  .badge{
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    min-width:52px; max-width:100px; padding:5px 7px; border-radius:4px; border:1px solid var(--border-soft);
+    background:rgba(255,255,255,0.02); font-size:9.5px; color:var(--text-faint);
+  }
+  .badge .num{
+    font-family:var(--font-mono); font-size:12.5px; color:var(--text-light);
+    max-width:86px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .badge.dead{ opacity:0.5; }
+  .badge.dead .num{ text-decoration:line-through; color:var(--accent-blood-bright); }
+  .badge .role-tag{ font-size:9px; }
+
+  .tally-row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .tally-row .tlabel{ width:52px; font-family:var(--font-mono); font-size:13px; color:var(--text-muted); flex-shrink:0;}
+  .tally-bar-wrap{ flex:1; background:var(--bg-panel-2); border-radius:3px; overflow:hidden; height:16px; border:1px solid var(--border-soft);}
+  .tally-bar{ height:100%; background:linear-gradient(90deg, var(--accent-blood), var(--accent-blood-bright)); transition:width .5s ease; }
+  .tally-count{ width:20px; text-align:right; font-family:var(--font-mono); font-size:12px; color:var(--text-muted);}
+
+  .winner-banner{
+    text-align:center; padding:26px 10px; border-radius:6px; margin-bottom:20px;
+    font-family:var(--font-display); font-weight:900; font-size:26px;
+  }
+  .winner-banner.citizen{ background:rgba(74,140,111,0.14); border:1px solid var(--accent-doctor); color:#bdeed6; }
+  .winner-banner.mafia{ background:rgba(140,31,40,0.18); border:1px solid var(--accent-blood-bright); color:#ffd0d4; }
+
+  .sidebar-toggle{
+    background:none; border:1px solid var(--border-soft); color:var(--text-muted);
+    font-family:var(--font-body); font-size:12px; padding:6px 12px; border-radius:2px;
+    cursor:pointer; transition:all .15s; white-space:nowrap;
+  }
+  .sidebar-toggle:hover{ border-color:var(--accent-gold); color:var(--accent-gold-bright); }
+  .sidebar-toggle.active{ border-color:var(--accent-gold); color:var(--accent-gold-bright); background:rgba(201,162,75,0.10); }
+
+  .sidebar-backdrop{ position:fixed; inset:0; z-index:40; pointer-events:none; display:none; }
+  @media (max-width: 720px){
+    .sidebar-backdrop{ display:block; background:rgba(0,0,0,0); transition:background .3s ease; }
+    .sidebar-backdrop.open{ background:rgba(0,0,0,0.55); pointer-events:auto; }
+  }
+  .layout{ display:flex; align-items:stretch; min-height:100vh; }
+  .layout .app{ flex:1 1 880px; }
+  .sidebar{
+    flex:0 0 0px; width:0; max-width:88vw;
+    background:linear-gradient(180deg, #1b1613, #120d0a);
+    border-left:0 solid var(--border-soft);
+    overflow:hidden;
+    transition: flex-basis .3s cubic-bezier(.2,.8,.2,1), width .3s cubic-bezier(.2,.8,.2,1);
+  }
+  .sidebar.open{ flex:0 0 320px; width:320px; border-left:1px solid var(--border-soft); }
+  .sidebar-inner{ width:320px; height:100%; overflow-y:auto; padding:20px 18px 40px; box-sizing:border-box; }
+  @media (max-width: 720px){
+    .layout{ position:relative; }
+    .sidebar{ position:fixed; top:0; right:0; height:100vh; z-index:45; box-shadow:-30px 0 60px -20px rgba(0,0,0,0.7); }
+    .sidebar.open{ width:320px; }
+  }
+  .sidebar-header{ display:flex; justify-between:space-between; align-items:center; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border-soft); }
+  .sidebar-title{ font-family:var(--font-display); font-weight:900; font-size:17px; color:var(--accent-gold-bright); }
+  .sidebar-close{ background:none; border:none; color:var(--text-faint); font-size:20px; cursor:pointer; line-height:1; padding:2px 6px; }
+  .sidebar-close:hover{ color:var(--text-light); }
+  .sidebar-section{ margin-bottom:24px; }
+  .sidebar-label{ font-family:var(--font-mono); font-size:10.5px; letter-spacing:2px; color:var(--text-faint); text-transform:uppercase; margin-bottom:10px; }
+  .name-clear-btn{
+    background:none; border:1px solid var(--border-soft); color:var(--text-faint);
+    font-family:var(--font-body); font-size:11px; letter-spacing:0; text-transform:none;
+    padding:4px 10px; border-radius:5px; cursor:pointer;
+  }
+  .name-clear-btn:hover{ color:var(--text-light); border-color:var(--text-faint); }
+  .sidebar-status{ font-size:13.5px; color:var(--text-light); line-height:1.7; background:rgba(255,255,255,0.03); border:1px solid var(--border-soft); border-radius:4px; padding:10px 12px; }
+  .sidebar-empty{ font-size:12.5px; color:var(--text-faint); line-height:1.6; }
+  .role-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .role-table td{ padding:7px 4px; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:middle; }
+  .role-table td.rt-num{ font-family:var(--font-mono); color:var(--text-light); width:44px; font-size:14px; }
+  .role-table td.rt-role{ font-weight:700; }
+  .role-table td.rt-status{ text-align:right; font-size:11px; color:var(--text-faint); }
+  .role-table tr.dead td{ opacity:0.4; }
+  .role-table tr.dead td.rt-num{ text-decoration:line-through; }
+
+  .night-log{ display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto; background:rgba(255,255,255,0.03); border:1px solid var(--border-soft); border-radius:4px; padding:10px 12px; }
+  .night-log-item{ font-size:12.5px; color:var(--text-light); line-height:1.5; padding-bottom:6px; border-bottom:1px dashed rgba(255,255,255,0.06); }
+  .night-log-item:last-child{ border-bottom:none; padding-bottom:0; }
+
+  .setup-block{ margin-bottom:22px; }
+  .mode-btn{ flex:1; font-family:var(--font-body); font-weight:700; font-size:14.5px; padding:14px 10px; border-radius:4px; border:1px solid var(--border-soft); background:var(--bg-panel-2); color:var(--text-muted); cursor:pointer; transition:all .15s; }
+  .mode-btn:hover{ border-color:var(--accent-gold); }
+  .mode-btn.selected{ border-color:var(--accent-gold); background:rgba(201,162,75,0.14); color:var(--accent-gold-bright); box-shadow:0 0 0 1px rgba(201,162,75,0.3); }
+  .stepper{ display:flex; align-items:center; gap:14px; }
+  .stepper-btn{ width:38px; height:38px; border-radius:50%; border:1px solid var(--border-soft); background:var(--bg-panel-2); color:var(--accent-gold-bright); font-size:20px; font-family:var(--font-mono); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .12s; flex-shrink:0; }
+  .stepper-btn:hover{ border-color:var(--accent-gold); background:rgba(201,162,75,0.14); }
+  .stepper-btn:disabled{ opacity:0.3; cursor:not-allowed; }
+  .stepper-value{ font-family:var(--font-mono); font-size:20px; min-width:64px; text-align:center; color:var(--text-light); }
+  .role-stepper-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .role-stepper-row:last-child{ border-bottom:none; }
+  .role-stepper-row span{ font-size:14.5px; color:var(--text-light); }
+
+  .name-input-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+  .name-input{ width:110px; padding:9px 10px; border-radius:4px; border:1px solid var(--border-soft); background:var(--bg-panel-2); color:var(--text-light); font-family:var(--font-body); font-size:13.5px; outline:none; transition:border-color .15s; }
+  .name-input:focus{ border-color:var(--accent-gold); }
+  .name-input::placeholder{ color:var(--text-faint); }
+</style>
+</head>
+<body>
+  <div class="layout" id="layoutRoot">
+    <div class="app" id="appRoot">
+      <div class="topbar">
+        <div class="topbar-right">
+          <div class="round-badge" id="roundBadge">ROUND 01</div>
+          <button class="sidebar-toggle" id="bgmToggleBtn" onclick="toggleBGM()">🔈 BGM 켜기</button>
+          <button class="sidebar-toggle" id="sidebarToggleBtn" onclick="toggleSidebar()">🗂 진행자 노트</button>
+          <button class="reset-btn" onclick="resetGame()">처음부터</button>
+        </div>
+      </div>
+      <div class="roster" id="roster"></div>
+      <div class="stage" id="stage"></div>
+    </div>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebarPanel">
+      <div class="sidebar-inner">
+        <div class="sidebar-header">
+          <div class="sidebar-title">🗂 진행자 노트</div>
+          <button class="sidebar-close" onclick="toggleSidebar()">✕</button>
+        </div>
+        <div id="sidebarContent"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const ROLE_META = {
+  '마피아': {icon:'🕶️', cls:'mafia', color:'var(--accent-blood-bright)', flavor:()=>`밤이 되면 팀원과 함께(따로) 탈락시킬 ${josaEulReul(UN())} 지목하세요. 낮에는 정체를 들키지 않는 것이 관건입니다.`},
+  '경찰':   {icon:'👮‍♂️', cls:'police', color:'var(--accent-police)', flavor:()=>`밤마다 ${josaEulReul('한 '+UN())} 지목해 마피아인지 조사할 수 있습니다. 조사 결과는 오직 당신만 볼 수 있습니다.`},
+  '의사':   {icon:'👨‍⚕️', cls:'doctor', color:'var(--accent-doctor)', flavor:()=>`밤마다 ${josaEulReul('한 '+UN())} 지목해 보호하세요. 마피아의 표적과 일치하면 그 밤은 아무도 탈락하지 않습니다.`},
+  '시민':   {icon:'👤', cls:'citizen', color:'var(--accent-gold-bright)', flavor:()=>`밤마다 의심되는 ${josaEulReul(UN())} 지목하세요. 살아있는 시민 모두가 지목한 ${josaIGa(UN())} 서로 일치하면, 그 ${josaEunNeun(UN())} 다음 낮 투표권을 잃습니다.`},
+  '스파이': {icon:'🕵️‍♂️', cls:'spy', color:'var(--accent-spy)', flavor:()=>
+    isSpyKillerMode()
+      ? `마피아가 모두 탈락하여, 이제 당신이 마피아를 대신해 밤마다 탈락시킬 ${josaEulReul(UN())} 직접 지목합니다. 이때부터는 경찰의 조사로도 정체가 드러날 수 있습니다.`
+      : `당신은 마피아 소속 비밀 요원으로 밤마다 경찰서에 몰래 잠입하여 경찰 내부 전산망을 해킹합니다. 경찰로 추정되는 ${josaEulReul(UN())} 지목하여 실제 경찰과 일치할 경우 그 정체를 알아낼 수 있습니다. 경찰의 조사로는 마피아로 밝혀지지 않습니다.`
+  },
+};
+
+let state = {};
+let sidebarOpen = false;
+let pwModalOpen = false;
+let pwModalError = false;
+const SIDEBAR_PASSWORD = '8025';
+
+function toggleSidebar(){
+  if(sidebarOpen){ sidebarOpen = false; renderSidebar(); return; }
+  pwModalOpen = true;
+  pwModalError = false;
+  render();
+  setTimeout(()=>{ const el=document.getElementById('pwModalInput'); if(el) el.focus(); }, 30);
+}
+
+function closePwModal(){
+  pwModalOpen = false;
+  pwModalError = false;
+  render();
+}
+
+function submitPwModal(){
+  const el = document.getElementById('pwModalInput');
+  const val = el ? el.value : '';
+  if(val === SIDEBAR_PASSWORD){
+    pwModalOpen = false;
+    pwModalError = false;
+    sidebarOpen = true;
+    render();
+    renderSidebar();
+  } else {
+    pwModalError = true;
+    render();
+    setTimeout(()=>{ const el2=document.getElementById('pwModalInput'); if(el2){ el2.value=''; el2.focus(); } }, 30);
+  }
+}
+
+function pwModalKeydown(e){
+  if(e.key==='Enter'){ e.preventDefault(); submitPwModal(); }
+}
+
+let audioCtx = null;
+let bgmMaster = null;
+let bgmPlaying = false;
+let bgmActiveNodes = [];
+let bgmTimerId = null;
+
+function ensureAudioCtx(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    bgmMaster = audioCtx.createGain();
+    bgmMaster.gain.value = 0.0001;
+    bgmMaster.connect(audioCtx.destination);
+  }
+}
+
+function startBGM(){
+  ensureAudioCtx();
+  if(audioCtx.state==='suspended'){ audioCtx.resume(); }
+  bgmPlaying = true;
+  const now = audioCtx.currentTime;
+  bgmMaster.gain.cancelScheduledValues(now);
+  bgmMaster.gain.setValueAtTime(Math.max(bgmMaster.gain.value, 0.0001), now);
+  bgmMaster.gain.linearRampToValueAtTime(0.22, now + 2.5);
+
+  const droneFreqs = [55.00, 82.41, 110.00];
+  droneFreqs.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    osc.type = i===1 ? 'triangle' : 'sine';
+    osc.frequency.value = freq;
+    const detuneLFO = audioCtx.createOscillator();
+    detuneLFO.frequency.value = 0.06 + i*0.02;
+    const detuneGain = audioCtx.createGain();
+    detuneGain.gain.value = 4 + i*2;
+    detuneLFO.connect(detuneGain);
+    detuneGain.connect(osc.detune);
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass'; filter.frequency.value = 650;
+    const oscGain = audioCtx.createGain(); oscGain.gain.value = i===0 ? 0.5 : 0.28;
+
+    osc.connect(filter); filter.connect(oscGain); oscGain.connect(bgmMaster);
+    osc.start(); detuneLFO.start();
+    bgmActiveNodes.push({stop:()=>{ try{osc.stop();}catch(e){} try{detuneLFO.stop();}catch(e){} }});
+  });
+
+  const scale = [220.00, 261.63, 293.66, 329.63, 349.23];
+  function scheduleTick(){
+    if(!bgmPlaying) return;
+    const t = audioCtx.currentTime;
+    const freq = scale[Math.floor(Math.random()*scale.length)];
+    const osc = audioCtx.createOscillator();
+    osc.type = 'triangle'; osc.frequency.value = freq;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.09, t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+1.1);
+    const delay = audioCtx.createDelay(); delay.delayTime.value = 0.32;
+    const feedback = audioCtx.createGain(); feedback.gain.value = 0.32;
+    delay.connect(feedback); feedback.connect(delay);
+    osc.connect(g); g.connect(bgmMaster); g.connect(delay); delay.connect(bgmMaster);
+    osc.start(t); osc.stop(t + 1.2);
+    bgmTimerId = setTimeout(scheduleTick, 2200 + Math.random()*2600);
+  }
+  scheduleTick();
+}
+
+function stopBGM(){
+  bgmPlaying = false;
+  if(bgmTimerId){ clearTimeout(bgmTimerId); bgmTimerId = null; }
+  if(bgmMaster && audioCtx){
+    const now = audioCtx.currentTime;
+    bgmMaster.gain.cancelScheduledValues(now);
+    bgmMaster.gain.setValueAtTime(bgmMaster.gain.value, now);
+    bgmMaster.gain.linearRampToValueAtTime(0.0001, now + 1.2);
+  }
+  const nodesToStop = bgmActiveNodes; bgmActiveNodes = [];
+  setTimeout(()=>{ nodesToStop.forEach(n=>n.stop()); }, 1300);
+}
+
+function toggleBGM(){
+  if(bgmPlaying){ stopBGM(); } else { startBGM(); }
+  renderBGMButton();
+}
+
+function renderBGMButton(){
+  const btn = document.getElementById('bgmToggleBtn');
+  if(!btn) return;
+  btn.textContent = bgmPlaying ? '🔊 BGM 끄기' : '🔈 BGM 켜기';
+  btn.classList.toggle('active', bgmPlaying);
+}
+
+function freshState(){
+  const participantCount = 6;
+  return {
+    phase:'setup',
+    unitMode:'individual',
+    participantCount,
+    participantNames: Array.from({length:participantCount}, ()=>''),
+    roleCounts:{mafia:1, police:1, doctor:1, spy:1},
+    groups: Array.from({length:participantCount}, (_,i)=>({id:i+1, role:null, alive:true})),
+    round:1,
+    assignModal:null, assignChecked:[],
+    nightQueue:[], nightIndex:0, nightSub:'shield',
+    nightChoices:{}, mafiaTarget:null, nightEliminated:null,
+    policeResult:null, doctorResult:null, spyResult:null,
+    spyTransitionJustHappened:false,
+    gameLog:[],
+    citizenMatchResult:null,
+    noVoteGroups:[],
+    dayQueue:[], dayIndex:0, dayVotes:{},
+    dayVoteRestricted:[],
+    dayResult:null,
+    daySummaryRevealed:false,
+    dayTopCandidates:[], dayTie:false, dayTally:null, dayMaxVotes:0,
+    sharedConfirmed: false,
+    warningModal:null
+  };
+}
+
+const SAVE_KEY = 'mafiaGameState_v1';
+
+function saveState(){
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  }catch(e){ /* 저장 공간이 없거나 접근 불가한 경우 조용히 무시 */ }
+}
+
+function loadSavedState(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    if(!parsed || typeof parsed!=='object' || !parsed.phase) return null;
+    return parsed;
+  }catch(e){ return null; }
+}
+
+function clearSavedState(){
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+}
+
+function hydrateState(loaded){
+  const base = freshState();
+  if(!loaded) return base;
+  const merged = Object.assign({}, base, loaded);
+  merged.roleCounts = Object.assign({}, base.roleCounts, loaded.roleCounts || {});
+  return merged;
+}
+
+state = hydrateState(loadSavedState());
+
+function U(id){
+  if(state.unitMode==='individual'){
+    const g = getGroup(id);
+    if(g && g.name) return g.name;
+    return `${id}번`;
+  }
+  return `${id}모둠`;
+}
+function QTY(n){ return `${n}${state.unitMode==='individual' ? '명' : '모둠'}`; }
+function UN(){ return state.unitMode==='individual' ? '참가자' : '모둠'; }
+function hasBatchim(str){
+  const code = str.charCodeAt(str.length-1) - 0xAC00;
+  if(code<0 || code>11171) return false;
+  return code % 28 !== 0;
+}
+function josaEunNeun(word){ return word + (hasBatchim(word) ? '은' : '는'); }
+function josaIGa(word){ return word + (hasBatchim(word) ? '이' : '가'); }
+function josaEulReul(word){ return word + (hasBatchim(word) ? '을' : '를'); }
+function josaEuroLo(word){ return word + (hasBatchim(word) ? '으로' : '로'); }
+function josaWaGwa(word){ return word + (hasBatchim(word) ? '과' : '와'); }
+
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function setUnitMode(mode){ state.unitMode = mode; render(); }
+function syncParticipantNames(){
+  const arr = state.participantNames;
+  while(arr.length < state.participantCount) arr.push('');
+  while(arr.length > state.participantCount) arr.pop();
+}
+function updateParticipantName(index, value){ state.participantNames[index] = value; }
+function escapeHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function adjustParticipantCount(delta){
+  const newCount = clamp(state.participantCount + delta, 4, 20);
+  state.participantCount = newCount;
+  syncParticipantNames();
+  const total = () => state.roleCounts.mafia + state.roleCounts.police + state.roleCounts.doctor + state.roleCounts.spy;
+  while(total() > newCount){
+    if(state.roleCounts.spy>0) state.roleCounts.spy--;
+    else if(state.roleCounts.doctor>0) state.roleCounts.doctor--;
+    else if(state.roleCounts.police>0) state.roleCounts.police--;
+    else if(state.roleCounts.mafia>1) state.roleCounts.mafia--;
+    else break;
+  }
+  if(state.roleCounts.police<=0) state.roleCounts.spy = 0;
+  render();
+}
+
+function adjustRoleCount(role, delta){
+  const min = role==='mafia' ? 1 : 0;
+  const roles = ['mafia','police','doctor','spy'];
+  const others = roles.filter(r=>r!==role).reduce((s,r)=>s+state.roleCounts[r],0);
+  let max = Math.max(min, state.participantCount - others);
+  if(role==='spy') max = Math.min(1, max);
+  let val = clamp(state.roleCounts[role]+delta, min, max);
+  if(role==='spy' && state.roleCounts.police<=0) val = 0;
+  state.roleCounts[role] = val;
+  if(role==='police' && state.roleCounts.police<=0) state.roleCounts.spy = 0;
+  render();
+}
+
+function confirmSetup(){
+  state.groups = Array.from({length:state.participantCount}, (_,i)=>({
+    id:i+1, role:null, alive:true,
+    name: state.unitMode==='individual' ? (state.participantNames[i]||'').trim() : null,
+  }));
+  state.phase = 'intro'; render();
+}
+
+function getGroup(id){ return state.groups.find(g=>g.id===id); }
+function aliveGroups(){ return state.groups.filter(g=>g.alive); }
+function isSpyKillerMode(){
+  return state.groups.filter(g=>g.role==='마피아' && g.alive).length===0;
+}
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function resetGame(){
+  if(state.phase==='setup' || state.phase==='intro' || state.phase==='gameover'){
+    doResetGame();
+  } else {
+    showWarningModal('🔁 게임을 초기화합니다', '진행 중인 게임을 정말 처음부터 다시 시작할까요?', 'doResetGame');
+  }
+}
+
+function doResetGame(){
+  const savedNames = (state.participantNames || []).slice();
+  state = freshState();
+  const arr = savedNames.slice(0, state.participantCount);
+  while(arr.length < state.participantCount) arr.push('');
+  state.participantNames = arr;
+  clearSavedState(); render();
+}
+
+function clearParticipantNames(){
+  state.participantNames = state.participantNames.map(()=>'');
+  render();
+}
+
+function doAssignRoles(){
+  const {mafia, police, doctor, spy} = state.roleCounts;
+  const citizens = Math.max(0, state.participantCount - mafia - police - doctor - spy);
+  const pool = [
+    ...Array(mafia).fill('마피아'),
+    ...Array(spy).fill('스파이'),
+    ...Array(police).fill('경찰'),
+    ...Array(doctor).fill('의사'),
+    ...Array(citizens).fill('시민'),
+  ];
+  const roles = shuffle(pool);
+  state.groups.forEach((g,i)=>{ g.role = roles[i]; g.alive=true; });
+  state.phase='assign';
+  state.assignChecked=[];
+  render();
+}
+
+function openAssignModal(id){ 
+  if(state.assignChecked.includes(id)){
+    showWarningModal('🔒 이미 확인했어요', '이미 역할을 확인하셨습니다.<br>다시 확인할 수 없습니다.', null);
+    return;
+  }
+  state.assignModal=id; render(); 
+}
+
+function closeAssignModal(){
+  if(!state.assignChecked.includes(state.assignModal)) state.assignChecked.push(state.assignModal);
+  state.assignModal=null; render();
+}
+
+function goToSelfIntro(){
+  state.phase = 'self-intro';
+  render();
+}
+
+function goToFirstNight(){
+  buildNightQueue();
+  state.phase = state.nightQueue.length===0 ? 'night-ready' : 'night';
+  render();
+}
+
+function buildNightQueue(){
+  state.nightQueue = aliveGroups().map(g=>g.id).sort((a,b)=>a-b);
+  state.nightIndex=0; state.nightSub='shield';
+  state.nightChoices={}; state.mafiaTarget=null; state.nightEliminated=null;
+  state.policeResult=null; state.doctorResult=null; state.spyResult=null;
+  state.citizenMatchResult=null;
+}
+
+function nightRevealCurrent(){ state.nightSub='action'; render(); }
+
+function submitNightChoice(actorId, targetId){
+  const actor = getGroup(actorId);
+  state.nightChoices[actorId]=targetId;
+  const meta = ROLE_META[actor.role];
+  const logKey = `night-${state.round}-${actorId}`;
+  state.gameLog = state.gameLog.filter(entry=>entry.key!==logKey);
+  state.gameLog.push({key:logKey, text:`🌙 ${state.round}일차 밤 · ${meta.icon} ${U(actorId)}(${actor.role}) → ${U(targetId)} 선택`});
+  
+  if(state.nightIndex < state.nightQueue.length-1){
+    state.nightIndex += 1;
+    state.nightSub='shield';
+  } else {
+    state.phase='night-ready';
+  }
+  render();
+}
+
+function revealNightResults(){
+  const spyKillerMode = isSpyKillerMode();
+  const killerIds = state.groups.filter(g=>(g.role==='마피아' || (g.role==='스파이' && spyKillerMode)) && state.nightChoices[g.id]!==undefined).map(g=>g.id);
+  let mafiaTarget=null;
+  if(killerIds.length>0){
+    const choices = killerIds.map(id=>state.nightChoices[id]);
+    const allSame = choices.every(c=>c===choices[0]);
+    mafiaTarget = allSame ? choices[0] : choices[Math.floor(Math.random()*choices.length)];
+  }
+  state.mafiaTarget = mafiaTarget;
+
+  const police = state.groups.find(g=>g.role==='경찰');
+  if(police && state.nightChoices[police.id]!==undefined){
+    const t = getGroup(state.nightChoices[police.id]);
+    const isMafia = t.role==='마피아' || (t.role==='스파이' && spyKillerMode);
+    state.policeResult = {by:police.id, target:t.id, isMafia};
+  } else { state.policeResult=null; }
+
+  const doctor = state.groups.find(g=>g.role==='의사');
+  const doctorTarget = (doctor && state.nightChoices[doctor.id]!==undefined) ? state.nightChoices[doctor.id] : null;
+
+  let eliminated=null;
+  if(mafiaTarget!==null){
+    if(doctorTarget!==null && doctorTarget===mafiaTarget) eliminated=null;
+    else eliminated=mafiaTarget;
+  }
+  if(eliminated){ getGroup(eliminated).alive=false; }
+  state.nightEliminated=eliminated;
+
+  state.spyTransitionJustHappened = !spyKillerMode && isSpyKillerMode() && state.groups.some(g=>g.role==='스파이' && g.alive);
+
+  if(doctor && doctorTarget!==null){
+    state.doctorResult = {by:doctor.id, target:doctorTarget, saved:(mafiaTarget!==null && doctorTarget===mafiaTarget && eliminated===null)};
+  } else { state.doctorResult=null; }
+
+  const spy = state.groups.find(g=>g.role==='스파이');
+  if(spy && !spyKillerMode && state.nightChoices[spy.id]!==undefined){
+    const t = getGroup(state.nightChoices[spy.id]);
+    state.spyResult = {by:spy.id, target:t.id, isPolice:t.role==='경찰'};
+  } else { state.spyResult=null; }
+
+  const aliveCitizens = state.groups.filter(g=>g.role==='시민' && state.nightQueue.includes(g.id));
+  if(aliveCitizens.length>=2){
+    const choices = aliveCitizens.map(c=>state.nightChoices[c.id]);
+    const allSubmitted = choices.every(c=>c!==undefined);
+    if(allSubmitted){
+      const matched = choices.every(c=>c===choices[0]);
+      state.citizenMatchResult = {matched, targetId: matched ? choices[0] : null};
+      state.noVoteGroups = matched ? [choices[0]] : [];
+    } else {
+      state.citizenMatchResult = null;
+      state.noVoteGroups = [];
+    }
+  } else {
+    state.citizenMatchResult = null;
+    state.noVoteGroups = [];
+  }
+
+  state.phase='night-summary';
+  state.sharedConfirmed = false;
+  render();
+}
+
+function afterNightSummary(){
+  if(checkWinAndRender()) return;
+  buildDayQueue();
+  state.phase = 'day-intro';
+  render();
+}
+
+function startDayVote(){
+  state.phase = state.dayResult ? 'day-summary' : 'day-vote';
+  render();
+}
+
+function buildDayQueue(){
+  state.dayQueue = aliveGroups().map(g=>g.id);
+  state.dayVoteRestricted = state.noVoteGroups || [];
+  state.noVoteGroups = [];
+  state.dayIndex=0; state.dayVotes={}; state.dayResult=null;
+  state.daySummaryRevealed=false;
+  state.dayTopCandidates=[]; state.dayTie=false; state.dayTally=null; state.dayMaxVotes=0;
+  if(state.dayQueue.length<=1){
+    state.dayResult = {tally:{}, eliminated:null, tie:false};
+  }
+}
+
+function computeDayTally(){
+  const tally={};
+  aliveGroups().forEach(g=>tally[g.id]=0);
+  Object.values(state.dayVotes).forEach(t=>{ tally[t]=(tally[t]||0)+1; });
+  return tally;
+}
+
+function submitDayVote(voterId, targetId){
+  state.dayVotes[voterId]=targetId;
+  const logKey = `day-${state.round}-${voterId}`;
+  state.gameLog = state.gameLog.filter(entry=>entry.key!==logKey);
+  state.gameLog.push({key:logKey, text:`☀️ ${state.round}일차 낮 · ${U(voterId)} → ${U(targetId)} 투표`});
+  render();
+}
+
+function dayGoForward(){
+  const voterId = state.dayQueue[state.dayIndex];
+  const isRestricted = (state.dayVoteRestricted||[]).includes(voterId);
+  if(!isRestricted && state.dayVotes[voterId]===undefined){
+    showWarningModal('🙋 아직 투표하지 않았어요', `의심되는 ${josaEulReul(UN())}<br>먼저 선택해주세요.`, null);
+    return;
+  }
+  if(state.dayIndex < state.dayQueue.length-1){
+    state.dayIndex += 1;
+  } else {
+    finishDayVoting();
+  }
+  render();
+}
+
+function dayGoBack(){
+  if(state.dayIndex<=0) return;
+  state.dayIndex -= 1;
+  render();
+}
+
+function finishDayVoting(){
+  const tally = computeDayTally();
+  const maxV = Math.max(0, ...Object.values(tally));
+  if(maxV===0){
+    state.dayResult = {tally, eliminated:null, tie:false};
+    state.daySummaryRevealed=false;
+    state.phase='day-summary';
+    state.sharedConfirmed = false;
+    return;
+  }
+  const candidates = Object.keys(tally).filter(k=>tally[k]===maxV).map(Number);
+  state.dayTally = tally;
+  state.dayMaxVotes = maxV;
+  state.dayTopCandidates = candidates;
+  state.dayTie = candidates.length>1;
+  state.phase='day-final-statement';
+}
+
+function startDayRevote(){
+  state.dayIndex = 0;
+  state.phase='day-vote';
+  render();
+}
+
+function afterFinalStatement(){
+  state.phase='day-revise-check';
+  render();
+}
+
+function confirmDayResult(){
+  const eliminated = state.dayTopCandidates[0];
+  const wasKillerModeBefore = isSpyKillerMode();
+  getGroup(eliminated).alive=false;
+  state.spyTransitionJustHappened = !wasKillerModeBefore && isSpyKillerMode() && state.groups.some(g=>g.role==='스파이' && g.alive);
+  state.dayResult = {tally: state.dayTally, eliminated, tie:false};
+  state.daySummaryRevealed=false;
+  state.phase='day-summary';
+  state.sharedConfirmed = false;
+  render();
+}
+
+function revealDayIdentity(){
+  state.daySummaryRevealed = true;
+  render();
+}
+
+function afterDaySummary(){
+  if(checkWinAndRender()) return;
+  state.round++;
+  buildNightQueue();
+  state.phase = state.nightQueue.length===0 ? 'night-ready' : 'night';
+  render();
+}
+
+function checkWinAndRender(){
+  const mafiaSideAlive = state.groups.filter(g=>g.alive && (g.role==='마피아' || g.role==='스파이')).length;
+  const othersAlive = state.groups.filter(g=>g.alive && g.role!=='마피아' && g.role!=='스파이').length;
+  if(mafiaSideAlive===0){ state.phase='gameover'; state.winner='citizen'; render(); return true; }
+  if(mafiaSideAlive>=othersAlive){ state.phase='gameover'; state.winner='mafia'; render(); return true; }
+  return false;
+}
+
+function confirmSharedMessage(){
+  state.sharedConfirmed = true;
+  render();
+}
+
+function showWarningModal(lead, question, action){
+  state.warningModal = {lead, question, action};
+  render();
+}
+
+function closeWarningModal(){
+  state.warningModal = null;
+  render();
+}
+
+function confirmWarningModal(){
+  const action = state.warningModal ? state.warningModal.action : null;
+  state.warningModal = null;
+  if(action) window[action]();
+  render();
+}
+
+function checkGoToSelfIntro(){
+  const allChecked = state.assignChecked.length >= state.participantCount;
+  if(!allChecked){
+    showWarningModal('⚠️ 확인해주세요', `아직 정체 확인을 안 한 ${josaIGa(UN())} 있어요.<br>그래도 자기소개 시간으로 넘어갈까요?`, 'goToSelfIntro');
+  } else {
+    goToSelfIntro();
+  }
+}
+
+function checkGoToFirstNight(){
+  showWarningModal('🌙 시작하기 전에 확인해주세요', `${UN()} 모두<br>자기소개를 마쳤나요?`, 'goToFirstNight');
+}
+
+function checkStartDayVote(){
+  showWarningModal('🗣️ 시작하기 전에 확인해주세요', `${UN()} 모두<br>충분히 토론을 마쳤나요?`, 'startDayVote');
+}
+
+function checkAfterFinalStatement(){
+  showWarningModal('🎤 결과를 확정하기 전에 확인해주세요', `지목된 ${josaIGa(UN())}<br>변론을 모두 마쳤나요?`, 'afterFinalStatement');
+}
+
+function render(){
+  const roundBadge = document.getElementById('roundBadge');
+  const stage = document.getElementById('stage');
+  if(!roundBadge || !stage) return;
+  roundBadge.textContent = `ROUND ${String(state.round).padStart(2,'0')}`;
+  renderRoster();
+  renderSidebar();
+  stage.innerHTML = renderPhase();
+
+  if(state.assignModal!==null){
+    const g = getGroup(state.assignModal);
+    const meta = ROLE_META[g.role];
+    let extraInfo = '';
+    if(g.role==='마피아'){
+      const mafiaPartners = state.groups.filter(o=>o.id!==g.id && o.role==='마피아');
+      const spyPartners = state.groups.filter(o=>o.role==='스파이');
+      let lines = '';
+      if(mafiaPartners.length>0){
+        const names = mafiaPartners.map(p=>`<b>${U(p.id)}</b>`).join(', ');
+        lines += `🤝 함께하는 마피아 팀원은 ${names}입니다. 밤에 마피아끼리 서로 다른 대상을 지목하면 그 중 하나가 무작위로 정해집니다.`;
+      }
+      if(spyPartners.length>0){
+        const names = spyPartners.map(p=>`<b>${U(p.id)}</b>`).join(', ');
+        lines += `${lines ? '<br><br>' : ''}🕵️‍♂️ 경찰서에 잠입한 우리 편 스파이는 ${names}입니다. 스파이는 경찰 조사로 밝혀지지 않으니 믿고 활용하세요.`;
+      }
+      if(lines) extraInfo = `<div class="feedback-box bad" style="text-align:left;">${lines}</div>`;
+    } else if(g.role==='스파이'){
+      const mafiaMembers = state.groups.filter(o=>o.role==='마피아');
+      const mafiaNames = mafiaMembers.map(p=>`<b>${U(p.id)}</b>`).join(', ');
+      extraInfo = `<div class="feedback-box bad" style="text-align:left;">🕵️‍♂️ 당신은 마피아 소속의 비밀 요원입니다.${mafiaMembers.length ? ` 진짜 마피아는 ${mafiaNames}입니다.` : ''} 마피아가 모두 탈락하면, 그때부터는 당신이 마피아를 대신해 직접 탈락시킬 대상을 지목하게 되며, 이때부터는 경찰 조사로도 정체가 드러날 수 있습니다.</div>`;
+    }
+    document.body.insertAdjacentHTML('beforeend', `
+      <div class="overlay" id="assignOverlay">
+        <div class="role-card">
+          <div class="stamp">1급 비밀</div>
+          <div class="role-icon">${meta.icon}</div>
+          <div class="eyebrow" style="color:${meta.color}">${U(g.id)}의 정체</div>
+          <h2 class="role-name ${meta.cls}">${g.role}</h2>
+          <p class="role-flavor">${meta.flavor()}</p>
+          ${extraInfo}
+          <button class="btn wide" onclick="closeAssignModal()">확인했습니다 · 화면 가리기</button>
+        </div>
+      </div>`);
+  } else {
+    const ex = document.getElementById('assignOverlay');
+    if(ex) ex.remove();
+  }
+
+  if(state.warningModal){
+    const isAlert = !state.warningModal.action;
+    document.body.insertAdjacentHTML('beforeend', `
+      <div class="overlay" id="warningOverlay">
+        <div class="warning-card">
+          <div class="warning-icon">🚨</div>
+          <div class="warning-lead">${state.warningModal.lead}</div>
+          <div class="warning-title">${state.warningModal.question}</div>
+          <div class="warning-btns">
+            ${isAlert
+              ? `<button class="btn wide warning-yes" onclick="closeWarningModal()">확인했어요!</button>`
+              : `<button class="btn wide warning-yes" onclick="confirmWarningModal()">네, 넘어갈게요</button>
+                 <button class="btn wide warning-no" onclick="closeWarningModal()">아니요, 다시 볼게요</button>`}
+          </div>
+        </div>
+      </div>`);
+  } else {
+    const ex2 = document.getElementById('warningOverlay');
+    if(ex2) ex2.remove();
+  }
+
+  if(pwModalOpen){
+    document.body.insertAdjacentHTML('beforeend', `
+      <div class="overlay" id="pwModalOverlay">
+        <div class="warning-card pw-card">
+          <div class="warning-icon">🔐</div>
+          <div class="warning-lead">진행자 전용 화면이에요</div>
+          <div class="warning-title" style="font-size:19px; margin-bottom:14px;">비밀번호를 입력해주세요</div>
+          <input type="password" id="pwModalInput" class="pw-input" inputmode="numeric" autocomplete="off"
+            onkeydown="pwModalKeydown(event)" placeholder="••••">
+          ${pwModalError ? `<div class="pw-error">비밀번호가 올바르지 않아요. 다시 시도해주세요.</div>` : ''}
+          <div class="warning-btns" style="margin-top:16px;">
+            <button class="btn wide warning-yes" onclick="submitPwModal()">확인</button>
+            <button class="btn wide warning-no" onclick="closePwModal()">취소</button>
+          </div>
+        </div>
+      </div>`);
+  } else {
+    const ex3 = document.getElementById('pwModalOverlay');
+    if(ex3) ex3.remove();
+  }
+
+  saveState();
+}
+
+function renderSidebar(){
+  const panel = document.getElementById('sidebarPanel');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const toggleBtn = document.getElementById('sidebarToggleBtn');
+  if(!panel) return;
+  panel.classList.toggle('open', sidebarOpen);
+  if(backdrop) backdrop.classList.toggle('open', sidebarOpen);
+  if(toggleBtn) toggleBtn.classList.toggle('active', sidebarOpen);
+  if(!sidebarOpen) return;
+
+  const rolesAssigned = state.groups.some(g=>g.role!==null);
+  const content = document.getElementById('sidebarContent');
+  content.innerHTML = `
+    <div class="sidebar-section">
+      <div class="sidebar-label">진행 상황</div>
+      <div class="sidebar-status">${getPhaseStatusText()}</div>
+    </div>
+    ${state.gameLog.length>0 ? `
+    <div class="sidebar-section">
+      <div class="sidebar-label">📜 진행 기록</div>
+      <div class="night-log">
+        ${state.gameLog.map(entry=>`<div class="night-log-item">${entry.text}</div>`).join('')}
+      </div>
+    </div>` : ''}
+    <div class="sidebar-section">
+      <div class="sidebar-label">${UN()}별 역할</div>
+      ${rolesAssigned ? `
+        <table class="role-table">
+          ${state.groups.map(g=>{
+            const meta = ROLE_META[g.role];
+            return `<tr class="${g.alive?'':'dead'}">
+              <td class="rt-num">${U(g.id)}</td>
+              <td class="rt-role" style="color:${meta.color}">${meta.icon} ${g.role}</td>
+              <td class="rt-status">${g.alive?'생존':'탈락'}</td>
+            </tr>`;
+          }).join('')}
+        </table>
+      ` : `<div class="sidebar-empty">아직 역할이 배정되지 않았습니다.</div>`}
+    </div>
+  `;
+}
+
+function getPhaseStatusText(){
+  switch(state.phase){
+    case 'intro': return '대기 중';
+    case 'assign': return '역할 확인 단계';
+    case 'self-intro': return '자기소개 시간';
+    case 'night': return `🌙 ${state.round}일차 밤 진행 중`;
+    case 'night-ready': return `🌙 ${state.round}일차 밤 선택 완료`;
+    case 'night-summary': return `☀️ ${state.round}일차 밤 결과 확인 중`;
+    case 'day-intro': return `☀️ ${state.round}일차 낮 토론 시작`;
+    case 'day-vote': return `☀️ ${state.round}일차 낮 투표 진행 중`;
+    case 'day-final-statement': return `🎤 ${state.round}일차 낮 최후 변론`;
+    case 'day-revise-check': return `🗳️ ${state.round}일차 낮 투표 확정 전`;
+    case 'day-summary': return `☀️ ${state.round}일차 낮 투표 결과`;
+    case 'gameover': return '🏁 게임 종료';
+    default: return '';
+  }
+}
+
+function renderRoster(){
+  const el = document.getElementById('roster');
+  if(!el) return;
+  let pendingDeadId = null;
+  if(!state.sharedConfirmed){
+    if(state.phase==='night-summary') pendingDeadId = state.nightEliminated;
+    else if(state.phase==='day-summary') pendingDeadId = state.dayResult ? state.dayResult.eliminated : null;
+  }
+  el.innerHTML = state.groups.map(g=>{
+    const displayAlive = g.alive || g.id===pendingDeadId;
+    const revealed = !displayAlive && state.phase!=='assign' && state.phase!=='intro' && state.phase!=='self-intro';
+    return `<div class="badge ${displayAlive?'':'dead'}">
+      <div class="num">${U(g.id)}</div>
+      <div class="role-tag">${revealed ? g.role : (displayAlive?'생존':'탈락')}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPhase(){
+  switch(state.phase){
+    case 'setup': return phaseSetup();
+    case 'intro': return phaseIntro();
+    case 'assign': return phaseAssign();
+    case 'self-intro': return phaseSelfIntro();
+    case 'night': return phaseNight();
+    case 'night-ready': return phaseNightReady();
+    case 'night-summary': return phaseNightSummary();
+    case 'day-intro': return phaseDayIntro();
+    case 'day-vote': return phaseDayVote();
+    case 'day-final-statement': return phaseDayFinalStatement();
+    case 'day-revise-check': return phaseDayReviseCheck();
+    case 'day-summary': return phaseDaySummary();
+    case 'gameover': return phaseGameOver();
+    default: return '';
+  }
+}
+
+function phaseSetup(){
+  const {mafia, police, doctor, spy} = state.roleCounts;
+  const citizens = state.participantCount - mafia - police - doctor - spy;
+  const unitWord = UN();
+  return `
+  <div class="card">
+    <div class="eyebrow" style="text-align:center;">SETUP</div>
+    <h1 class="title" style="text-align:center;">게임 설정</h1>
+    <p class="desc" style="text-align:center;">참여 방식과 인원, 역할 구성을 정해주세요.</p>
+
+    <div class="setup-block">
+      <div class="sidebar-label">참여 방식</div>
+      <div style="display:flex; gap:10px;">
+        <button class="mode-btn ${state.unitMode==='individual'?'selected':''}" onclick="setUnitMode('individual')">🙋 개인으로 참여</button>
+        <button class="mode-btn ${state.unitMode==='group'?'selected':''}" onclick="setUnitMode('group')">👥 모둠으로 참여</button>
+      </div>
+    </div>
+
+    <div class="setup-block">
+      <div class="sidebar-label">${unitWord} 수</div>
+      <div class="stepper">
+        <button class="stepper-btn" onclick="adjustParticipantCount(-1)" ${state.participantCount<=4?'disabled':''}>−</button>
+        <div class="stepper-value">${QTY(state.participantCount)}</div>
+        <button class="stepper-btn" onclick="adjustParticipantCount(1)" ${state.participantCount>=20?'disabled':''}>+</button>
+      </div>
+    </div>
+
+    ${state.unitMode==='individual' ? `
+    <div class="setup-block">
+      <div class="sidebar-label" style="display:flex; align-items:center; justify-content:space-between;">
+        <span>참가자 이름 (선택)</span>
+        <button class="name-clear-btn" onclick="clearParticipantNames()">이름 초기화</button>
+      </div>
+      <div class="name-input-grid">
+        ${state.participantNames.map((name,i)=>`
+          <input type="text" class="name-input" placeholder="${i+1}번" maxlength="12"
+            value="${escapeHtml(name)}" oninput="updateParticipantName(${i}, this.value)">
+        `).join('')}
+      </div>
+    </div>` : ''}
+
+    <div class="setup-block">
+      <div class="sidebar-label">역할 구성</div>
+      <div class="role-stepper-row">
+        <span>🕶️ 마피아</span>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="adjustRoleCount('mafia',-1)" ${mafia<=1?'disabled':''}>−</button>
+          <div class="stepper-value">${mafia}</div>
+          <button class="stepper-btn" onclick="adjustRoleCount('mafia',1)" ${mafia+police+doctor+spy>=state.participantCount?'disabled':''}>+</button>
+        </div>
+      </div>
+      <div class="role-stepper-row">
+        <span>🕵️‍♂️ 스파이</span>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="adjustRoleCount('spy',-1)" ${spy<=0?'disabled':''}>−</button>
+          <div class="stepper-value">${spy}</div>
+          <button class="stepper-btn" onclick="adjustRoleCount('spy',1)" ${(spy>=1 || police<=0 || mafia+police+doctor+spy>=state.participantCount)?'disabled':''}>+</button>
+        </div>
+      </div>
+      ${police<=0 ? `<p class="desc" style="font-size:12px; color:var(--text-faint); margin:-6px 0 0;">※ 스파이는 경찰이 1명 이상 있어야 추가할 수 있어요.</p>` : ''}
+      <div class="role-stepper-row">
+        <span>👮‍♂️ 경찰</span>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="adjustRoleCount('police',-1)" ${police<=0?'disabled':''}>−</button>
+          <div class="stepper-value">${police}</div>
+          <button class="stepper-btn" onclick="adjustRoleCount('police',1)" ${mafia+police+doctor+spy>=state.participantCount?'disabled':''}>+</button>
+        </div>
+      </div>
+      <div class="role-stepper-row">
+        <span>👨‍⚕️ 의사</span>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="adjustRoleCount('doctor',-1)" ${doctor<=0?'disabled':''}>−</button>
+          <div class="stepper-value">${doctor}</div>
+          <button class="stepper-btn" onclick="adjustRoleCount('doctor',1)" ${mafia+police+doctor+spy>=state.participantCount?'disabled':''}>+</button>
+        </div>
+      </div>
+      <div class="role-stepper-row" style="opacity:0.7;">
+        <span>👤 시민 (자동 계산)</span>
+        <div class="stepper-value" style="min-width:40px; text-align:center;">${citizens}${state.unitMode==='individual'?'명':'모둠'}</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <button class="btn wide" onclick="confirmSetup()">다음 →</button>
+  </div>`;
+}
+
+function phaseIntro(){
+  const {mafia, police, doctor, spy} = state.roleCounts;
+  const citizens = Math.max(0, state.participantCount - mafia - police - doctor - spy);
+  const roleRow = (icon, cls, color, name, qty, desc) => `
+    <div class="intro-role-row">
+      <div class="intro-role-icon">${icon}</div>
+      <div class="intro-role-body">
+        <div class="intro-role-name" style="color:${color}">${name} <span class="intro-role-qty">${qty}</span></div>
+        <div class="intro-role-desc">${desc}</div>
+      </div>
+    </div>`;
+  return `
+  <div class="card">
+    <div class="eyebrow" style="text-align:center;">GAME START</div>
+    <h1 class="title" style="text-align:center;">마피아 게임</h1>
+    <p class="desc" style="text-align:center;">${QTY(state.participantCount)}에게 아래 역할이 무작위로 배정됩니다.</p>
+
+    ${roleRow('🕶️','mafia','var(--accent-blood-bright)','마피아',QTY(mafia),'🌙 밤마다 탈락시킬 참가자를 지목합니다. 낮에는 정체를 들키지 않는 것이 관건입니다.')}
+    ${spy>0 ? roleRow('🕵️‍♂️','spy','var(--accent-spy)','스파이',QTY(spy),'🕵️ 마피아 소속 비밀 요원으로 밤마다 경찰서에 몰래 잠입하여 경찰 내부 전산망을 해킹합니다. 경찰로 추정되는 참가자를 지목해 실제 경찰과 일치할 경우 그 정체를 알아낼 수 있으며, 경찰의 조사로는 자신의 정체가 마피아인 것이 밝혀지지 않습니다. 마피아가 모두 탈락하면 그때부터 마피아 역할을 이어받고, 이때부터는 경찰 조사로도 정체가 드러날 수 있습니다.') : ''}
+    ${roleRow('👮‍♂️','police','var(--accent-police)','경찰',QTY(police),'🔍 밤마다 참가자 한 명을 조사해 마피아인지 확인할 수 있습니다.')}
+    ${roleRow('👨‍⚕️','doctor','var(--accent-doctor)','의사',QTY(doctor),'💉 밤마다 참가자 한 명을 보호합니다. 마피아의 표적과 일치하면 그 밤은 아무도 탈락하지 않습니다.')}
+    ${roleRow('👤','citizen','var(--accent-gold-bright)','시민',QTY(citizens),'🗳️ 밤마다 마피아로 의심되는 참가자를 지목합니다. 살아있는 시민 전원의 선택이 서로 일치하면, 그 참가자는 다음 낮 투표권을 잃습니다.')}
+
+    <div class="divider"></div>
+    <div class="intro-rule-block">
+      <div class="intro-rule-title">☀️ 낮에는</div>
+      <div class="intro-rule-desc">전체 ${josaIGa(UN())} 토론과 투표를 통해 마피아로 의심되는 참가자를 지목해 탈락시킵니다.</div>
+    </div>
+    <div class="intro-rule-block">
+      <div class="intro-rule-title">🏆 승리 조건</div>
+      <div class="intro-rule-desc">마피아${spy>0?'(스파이 포함)':''}를 모두 찾아내면 시민 승리, 마피아 진영의 수가 나머지와 같거나 많아지면 마피아 승리입니다.</div>
+    </div>
+
+    <button class="btn wide" onclick="doAssignRoles()">🎭 역할 배정하기</button>
+    <button class="btn ghost wide" style="margin-top:10px;" onclick="state.phase='setup'; render();">⚙️ 설정 다시 하기</button>
+  </div>`;
+}
+
+function phaseAssign(){
+  const allChecked = state.assignChecked.length>=state.participantCount;
+  return `
+  <div class="card">
+    <div class="eyebrow blood">배정 완료</div>
+    <h1 class="title">각 ${josaEunNeun(UN())} 정체를 확인하세요</h1>
+    <p class="desc">기기를 넘겨가며 자신에 해당하는 항목을 눌러 역할을 확인하세요. 정체는 <b>단 1회만</b> 확인 가능하므로 주의하세요!</p>
+    <div class="assign-grid">
+      ${state.groups.map(g=>{
+        const isChecked = state.assignChecked.includes(g.id);
+        return `
+        <div class="assign-tile ${isChecked ? 'checked' : ''}" onclick="openAssignModal(${g.id})">
+          <div class="n">${U(g.id)}</div>
+          <div class="lbl">${isChecked ? '🔒 확인 완료' : '눌러서 확인'}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="divider"></div>
+    <button class="btn wide" onclick="checkGoToSelfIntro()">다음: 자기소개 시간 →</button>
+    ${!allChecked?`<p style="text-align:center;color:var(--text-faint);font-size:12px;margin-top:10px;">아직 확인하지 않은 ${josaIGa(UN())} 있어도 진행할 수 있습니다.</p>`:''}
+  </div>`;
+}
+
+function phaseSelfIntro(){
+  return `
+  <div class="card" style="text-align:center;">
+    <div class="eyebrow">INTRO</div>
+    <h1 class="title">지금은 자기소개 시간입니다</h1>
+    <p class="desc" style="font-size:18px; margin:30px 0;">자신에 대해 간단히 소개하세요.</p>
+    <div class="divider"></div>
+    <button class="btn wide" onclick="checkGoToFirstNight()">🌙 첫째 밤 시작하기</button>
+  </div>`;
+}
+
+function phaseNight(){
+  if(state.nightQueue.length===0){ return phaseNightReady(); }
+  const actorId = state.nightQueue[state.nightIndex];
+  const actor = getGroup(actorId);
+  const meta = ROLE_META[actor.role];
+
+  if(state.nightSub==='shield'){
+    return `
+    <div class="card">
+      <div class="eyebrow blood">🌙 밤이 되었습니다 · ROUND ${state.round}</div>
+      <div class="shield">
+        <div class="lock">🔒</div>
+        <div class="who">${U(actorId)} 차례입니다</div>
+        <div class="warn-line">다른 ${josaEunNeun(UN())} 화면을 보지 마세요. 본인이 ${josaIGa(U(actorId))} 맞을 때만 눌러주세요.</div>
+        <button class="btn wide" onclick="nightRevealCurrent()">내가 ${U(actorId)}입니다 · 확인하기</button>
+      </div>
+    </div>`;
+  }
+
+  const targets = aliveGroups().filter(g=> actor.role==='의사' ? true : g.id!==actorId);
+  let question;
+  if(actor.role==='마피아') question=`오늘 밤, 탈락시킬 ${josaEulReul(UN())} 선택하세요.`;
+  else if(actor.role==='경찰') question=`마피아인지 조사할 ${josaEulReul(UN())} 선택하세요.`;
+  else if(actor.role==='의사') question=`오늘 밤 보호할 ${josaEulReul(UN())} 선택하세요.`;
+  else if(actor.role==='스파이') question = isSpyKillerMode() ? `오늘 밤, 탈락시킬 ${josaEulReul(UN())} 선택하세요.` : `경찰로 추정되는 ${josaEulReul(UN())} 선택하세요.`;
+  else question=`의심되는 ${josaEulReul(UN())} 하나 선택하세요.`;
+  return `
+  <div class="card">
+    <div class="eyebrow" style="color:${meta.color}">${meta.icon} ${U(actorId)} · ${actor.role}</div>
+    <h1 class="title">${question}</h1>
+    <p class="desc">${meta.flavor()}</p>
+    <div class="candidate-row">
+      ${state.groups.map(g=>`<button class="num-btn" ${targets.find(t=>t.id===g.id)?'':'disabled'} onclick="submitNightChoice(${actorId}, ${g.id})">${U(g.id)}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function phaseNightReady(){
+  const nightTitle = state.round === 1 ? '첫째 날 밤' : `${state.round}일차 밤`;
+  return `
+  <div class="card">
+    <div class="eyebrow blood">🌙 ${state.round}일차 밤 · 전원 선택 완료</div>
+    <h1 class="title">밤 사이에 무슨 일이 있었을까요?</h1>
+    <p class="desc">모든 ${josaIGa(UN())} 선택이 접수되었습니다. 버튼을 누르면 탈락자, 경찰의 조사 결과, 의사의 치료 결과, 시민의 선택 결과가 한 번에 계산되어 공개됩니다.</p>
+    <button class="btn wide" onclick="revealNightResults()">🔦 ${nightTitle} 결과 확인하기</button>
+  </div>`;
+}
+
+function phaseNightSummary(){
+  if(!state.sharedConfirmed){
+    return `
+    <div class="card" style="text-align:center;">
+      <div class="eyebrow blood">📢 다 함께 확인</div>
+      <h1 class="title" style="margin:24px 0;">다 함께 확인하세요</h1>
+      <button class="btn wide" onclick="confirmSharedMessage()">확인</button>
+    </div>`;
+  }
+
+  const d = state.nightEliminated;
+  const pr = state.policeResult;
+  const dr = state.doctorResult;
+  const sr = state.spyResult;
+  const cr = state.citizenMatchResult;
+  return `
+  <div class="card">
+    <div class="eyebrow blood">☀️ ${state.round}일차 아침이 밝았습니다</div>
+    ${state.spyTransitionJustHappened ? `<div class="transition-banner">🚨 마피아가 모두 사라졌습니다!<br>지금부터 숨어있던 존재가 마피아를 대신해 활동합니다.<br>이제부터는 경찰의 조사로도 정체가 드러날 수 있습니다.</div>` : ''}
+    <h1 class="title">${d ? `간밤에 ${josaIGa(U(d))} 어둠 속에서 조용히 찾아온 마피아에 의해 탈락했습니다.` : '아무도 탈락하지 않았습니다'}</h1>
+    ${d
+      ? `<p class="desc">${U(d)}의 정체는 <b style="color:var(--accent-gold-bright)">${getGroup(d).role}</b>${hasBatchim(getGroup(d).role) ? '이었습니다' : '였습니다'}.</p>`
+      : `<p class="desc">의사의 보호가 있었거나, 밤 사이 마피아가 아무도 지목하지 못했습니다.</p>`}
+    ${pr ? `<div class="feedback-box ${pr.isMafia?'good':'neutral'}">👮‍♂️ 경찰의 조사 결과 — ${pr.isMafia?'조사에 성공했습니다.':'조사에 실패했습니다.'}</div>` : ''}
+    ${dr ? `<div class="feedback-box ${dr.saved?'good':'neutral'}">👨‍⚕️ 의사의 치료 결과 — ${dr.saved?'치료에 성공했습니다.':'치료에 실패했습니다.'}</div>` : ''}
+    ${sr ? `<div class="feedback-box ${sr.isPolice?'bad':'neutral'}">🕵️‍♂️ 스파이의 전산망 해킹 결과 — ${sr.isPolice?'경찰 파악에 성공했습니다.':'경찰 파악에 실패했습니다.'}</div>` : ''}
+    ${cr ? `<div class="feedback-box ${cr.matched?'bad':'neutral'}">👥 시민 ${UN()}들의 의견 — ${cr.matched?`일치했습니다! <b>${U(cr.targetId)}</b>${hasBatchim(U(cr.targetId)) ? '은' : '는'} 오늘 낮 투표권을 잃습니다.`:'일치하지 않았습니다.'}</div>` : ''}
+    <div class="divider"></div>
+    <button class="btn wide" onclick="afterNightSummary()">낮 토론 및 투표로 이동 →</button>
+  </div>`;
+}
+
+function phaseDayIntro(){
+  return `
+  <div class="card" style="text-align:center;">
+    <div class="eyebrow">☀️ DAY TIME</div>
+    <h1 class="title">낮이 되었습니다</h1>
+    <p class="desc" style="font-size:18px; margin:30px 0;">지금부터 토론을 시작하세요.</p>
+    <div class="divider"></div>
+    <button class="btn wide" onclick="checkStartDayVote()">🗳️ 투표 시작하기</button>
+  </div>`;
+}
+
+function phaseDayVote(){
+  if(state.dayQueue.length<=1){ return phaseDaySummary(); }
+  if(state.dayIndex>=state.dayQueue.length){ finishDayVoting(); return renderPhase(); }
+  const voterId = state.dayQueue[state.dayIndex];
+  const isLast = state.dayIndex >= state.dayQueue.length-1;
+  const backBtn = state.dayIndex>0
+    ? `<button class="btn ghost wide" style="margin-top:10px;" onclick="dayGoBack()">◀ 이전 ${josaEuroLo(UN())}</button>`
+    : '';
+  const isRestricted = (state.dayVoteRestricted||[]).includes(voterId);
+
+  if(isRestricted){
+    return `
+    <div class="card">
+      <div class="eyebrow blood">🗳️ 낮 투표 · ${state.dayIndex+1}/${state.dayQueue.length}</div>
+      <h1 class="title">${U(voterId)}</h1>
+      <div class="feedback-box bad" style="text-align:center; font-size:15px; padding:20px;">🚫 전날 밤, 시민들의 선택이 모두 일치하여 투표권을 잃었으므로 투표할 수 없습니다.</div>
+      <div class="divider"></div>
+      <button class="btn wide" onclick="dayGoForward()">${isLast ? '모든 투표 완료 → 결과 확인' : `다음 ${josaEuroLo(UN())} ▶`}</button>
+      ${backBtn}
+    </div>`;
+  }
+
+  const targets = aliveGroups().filter(g=>g.id!==voterId);
+  const current = state.dayVotes[voterId];
+  return `
+  <div class="card">
+    <div class="eyebrow">🗳️ 낮 투표 · ${state.dayIndex+1}/${state.dayQueue.length}</div>
+    <h1 class="title">${U(voterId)}, 의심되는 ${UN()}에 투표하세요</h1>
+    <p class="desc">충분히 토론한 뒤, 오늘 탈락시킬 ${josaEulReul(UN())} 선택하세요.</p>
+    <div class="candidate-row">
+      ${state.groups.map(g=>{
+        const disabled = !targets.find(t=>t.id===g.id);
+        const selected = current===g.id;
+        return `<button class="num-btn ${selected?'selected':''}" ${disabled?'disabled':''} onclick="submitDayVote(${voterId}, ${g.id})">${U(g.id)}</button>`;
+      }).join('')}
+    </div>
+    <div class="pick-status">${current!==undefined ? `현재 선택: <b>${U(current)}</b>` : '아직 투표하지 않았습니다.'}</div>
+    <div class="divider"></div>
+    <button class="btn wide" onclick="dayGoForward()">${isLast ? '모든 투표 완료 → 결과 확인' : `다음 ${josaEuroLo(UN())} ▶`}</button>
+    ${backBtn}
+  </div>`;
+}
+
+function phaseDayFinalStatement(){
+  const cands = state.dayTopCandidates;
+  if(state.dayTie){
+    return `
+    <div class="card">
+      <div class="eyebrow blood">⚖️ 동점 발생</div>
+      <h1 class="title">${josaIGa(cands.map(id=>U(id)).join(', '))} 동점입니다 (${state.dayMaxVotes}표)</h1>
+      <p class="desc" style="font-size:16px; color:var(--accent-gold-bright);">지금부터 최후 변론을 진행하세요.</p>
+      <div class="candidate-row">
+        ${state.groups.map(g=> cands.includes(g.id)
+          ? `<div class="num-btn" style="cursor:default; border-color:var(--accent-blood-bright); color:var(--accent-blood-bright);">${U(g.id)}</div>`
+          : `<div class="num-btn" style="cursor:default; opacity:0.25;">${U(g.id)}</div>`).join('')}
+      </div>
+      <div class="divider"></div>
+      <button class="btn wide" onclick="startDayRevote()">🎤 변론 종료 → 재투표 진행</button>
+    </div>`;
+  }
+  const only = cands[0];
+  return `
+  <div class="card">
+    <div class="eyebrow blood">🎤 최다 득표</div>
+    <h1 class="title">${josaIGa(U(only))} 최다 득표를 받았습니다 (${state.dayMaxVotes}표)</h1>
+    <p class="desc" style="font-size:16px; color:var(--accent-gold-bright);">지금부터 최후 변론을 진행하세요.</p>
+    <div class="divider"></div>
+    <button class="btn wide" onclick="checkAfterFinalStatement()">변론 종료 → 계속</button>
+  </div>`;
+}
+
+function phaseDayReviseCheck(){
+  const only = state.dayTopCandidates[0];
+  return `
+  <div class="card">
+    <div class="eyebrow blood">🗳️ 투표 확정 전</div>
+    <h1 class="title">투표를 바꾸고 싶은 ${josaIGa(UN())} 있나요?</h1>
+    <p class="desc">최후 변론(${U(only)})을 들은 뒤, 마음이 바뀐 ${josaIGa(UN())} 있다면 투표를 처음부터 다시 진행할 수 있습니다.</p>
+    <div style="display:flex; gap:10px; flex-direction:column;">
+      <button class="btn wide" onclick="confirmDayResult()">✅ 결과 확정하기</button>
+      <button class="btn wide ghost" onclick="startDayRevote()">🔁 투표 다시 진행하기</button>
+    </div>
+  </div>`;
+}
+
+function phaseDaySummary(){
+  if(!state.sharedConfirmed){
+    return `
+    <div class="card" style="text-align:center;">
+      <div class="eyebrow blood">📢 다 함께 확인</div>
+      <h1 class="title" style="margin:24px 0;">다 함께 확인하세요</h1>
+      <button class="btn wide" onclick="confirmSharedMessage()">확인</button>
+    </div>`;
+  }
+
+  if(!state.dayResult){
+    return `<div class="card"><h1 class="title">투표할 다른 ${josaIGa(UN())} 없습니다</h1><button class="btn wide" onclick="afterDaySummary()">계속 →</button></div>`;
+  }
+  const {tally, eliminated} = state.dayResult;
+  const maxV = Math.max(1, ...Object.values(tally));
+  const tallyHtml = `
+    <div style="margin:18px 0;">
+      ${Object.entries(tally).map(([id,cnt])=>`
+        <div class="tally-row">
+          <div class="tlabel">${U(id)}</div>
+          <div class="tally-bar-wrap"><div class="tally-bar" style="width:${(cnt/maxV)*100}%"></div></div>
+          <div class="tally-count">${cnt}</div>
+        </div>`).join('')}
+    </div>`;
+
+  if(!eliminated){
+    return `
+    <div class="card">
+      <div class="eyebrow blood">투표 결과</div>
+      <h1 class="title">탈락자가 없습니다</h1>
+      ${tallyHtml}
+      <div class="divider"></div>
+      <button class="btn wide" onclick="afterDaySummary()">다음 밤으로 →</button>
+    </div>`;
+  }
+
+  if(!state.daySummaryRevealed){
+    return `
+    <div class="card">
+      <div class="eyebrow blood">투표 결과</div>
+      <h1 class="title">${josaIGa(U(eliminated))} 탈락했습니다</h1>
+      ${tallyHtml}
+      <div class="divider"></div>
+      <button class="btn wide" onclick="revealDayIdentity()">🎭 정체 공개</button>
+    </div>`;
+  }
+
+  const eliminatedGroup = eliminated ? getGroup(eliminated) : null;
+  const eliminatedMeta = eliminatedGroup ? ROLE_META[eliminatedGroup.role] : null;
+  return `
+  <div class="card">
+    <div class="eyebrow blood">${U(eliminated)}의 정체는…</div>
+    <div class="big-reveal">
+      <div class="icon">${eliminatedMeta.icon}</div>
+      <div class="role-big" style="color:${eliminatedMeta.color}">${eliminatedGroup.role}</div>
+      <div class="sub-line">${U(eliminated)} · 탈락</div>
+    </div>
+    ${state.spyTransitionJustHappened ? `<div class="transition-banner">🚨 마피아가 모두 사라졌습니다!<br>지금부터 숨어있던 존재가 마피아를 대신해 활동합니다.<br>이제부터는 경찰의 조사로도 정체가 드러날 수 있습니다.</div>` : ''}
+    <div class="divider"></div>
+    <button class="btn wide" onclick="afterDaySummary()">다음 밤으로 →</button>
+  </div>`;
+}
+
+function phaseGameOver(){
+  const winner = state.winner;
+  const hasSpy = state.groups.some(g=>g.role==='스파이');
+  return `
+  <div class="card">
+    <div class="winner-banner ${winner}">${winner==='citizen' ? '🕊️ 시민팀 승리' : '🕶️ 마피아팀 승리'}</div>
+    <p class="desc" style="text-align:center;">${winner==='citizen' ? `모든 마피아${hasSpy?'(스파이 포함)':''}를 찾아내 탈락시켰습니다.` : `마피아 진영의 수가 나머지 ${josaWaGwa(UN())} 같거나 많아졌습니다.`}</p>
+    <div class="divider"></div>
+    <div class="eyebrow">최종 정체 공개</div>
+    <div class="assign-grid">
+      ${state.groups.map(g=>{
+        const meta=ROLE_META[g.role];
+        return `<div class="assign-tile checked" style="cursor:default; opacity:1;">
+          <div class="n" style="color:var(--accent-gold-bright);">${U(g.id)} ${g.alive?'':'❌'}</div>
+          <div class="lbl" style="color:${meta.color}; font-weight:bold;">${g.role}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="divider"></div>
+    <button class="btn wide" onclick="resetGame()">🔁 새 게임 시작</button>
+  </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
