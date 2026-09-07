@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>번호 뽑기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --board: #1f3d33;
+    --board-dark: #173028;
+    --frame: #6b4a34;
+    --frame-dark: #4d341f;
+    --chalk: #f4f1e4;
+    --chalk-dim: #cfd6c9;
+    --yellow: #f2c94c;
+    --blue: #8fbfe0;
+    --pink: #e8a0bf;
+    --coral: #ee8a6c;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    min-height:100vh;
+    background: radial-gradient(ellipse at top, #2a2a2a, #141414 70%);
+    font-family:'Noto Sans KR', sans-serif;
+    color: var(--chalk);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 28px 16px;
+  }
+  .frame{
+    width:100%;
+    max-width:640px;
+    background: linear-gradient(160deg, var(--frame), var(--frame-dark));
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.55), inset 0 0 0 2px rgba(0,0,0,0.25);
+  }
+  .board{
+    background:
+      radial-gradient(ellipse at 20% 15%, rgba(255,255,255,0.05), transparent 40%),
+      radial-gradient(ellipse at 80% 85%, rgba(255,255,255,0.04), transparent 45%),
+      linear-gradient(160deg, var(--board), var(--board-dark));
+    border-radius: 10px;
+    padding: 30px 26px 24px;
+    position:relative;
+    overflow:hidden;
+  }
+  .board::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 3px 3px;
+    pointer-events:none;
+    opacity:0.5;
+  }
+  h1{
+    font-family:'Gaegu', 'Noto Sans KR', sans-serif;
+    font-weight:700;
+    font-size: 2.1rem;
+    margin: 0 0 4px;
+    text-align:center;
+    letter-spacing: 0.5px;
+  }
+  .sub{
+    text-align:center;
+    color: var(--chalk-dim);
+    font-size: 0.88rem;
+    margin: 0 0 22px;
+  }
+
+  .settings{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    justify-content:center;
+    margin-bottom: 22px;
+    padding-bottom: 20px;
+    border-bottom: 2px dashed rgba(244,241,228,0.25);
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+  .field label{
+    font-size: 0.78rem;
+    color: var(--chalk-dim);
+  }
+  .field input{
+    width: 74px;
+    text-align:center;
+    background: rgba(244,241,228,0.08);
+    border: 1.5px solid rgba(244,241,228,0.35);
+    border-radius: 8px;
+    color: var(--chalk);
+    font-size: 1.05rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    padding: 7px 4px;
+  }
+  .field input:focus{
+    outline: none;
+    border-color: var(--yellow);
+  }
+  .count-picker{
+    display:flex;
+    gap: 6px;
+  }
+  .count-opt{
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(244,241,228,0.08);
+    border: 1.5px solid rgba(244,241,228,0.35);
+    color: var(--chalk);
+    font-family: 'Gaegu', sans-serif;
+    font-weight:700;
+    font-size: 1rem;
+    box-shadow: none;
+  }
+  .count-opt.selected{
+    background: var(--yellow);
+    color: var(--board-dark);
+    border-color: var(--yellow);
+  }
+
+  .stage{
+    min-height: 150px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 14px;
+    flex-wrap:wrap;
+    margin-bottom: 18px;
+  }
+  .ball{
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Gaegu', sans-serif;
+    font-weight:700;
+    font-size: 2rem;
+    color: var(--board-dark);
+    border: 3px dashed rgba(0,0,0,0.15);
+    animation: pop 0.4s cubic-bezier(.2,1.4,.4,1) both;
+  }
+  @keyframes pop{
+    0%{ transform: scale(0.2) rotate(-8deg); opacity:0; }
+    70%{ transform: scale(1.12) rotate(3deg); opacity:1; }
+    100%{ transform: scale(1) rotate(0); }
+  }
+  .placeholder{
+    color: rgba(244,241,228,0.4);
+    font-size: 0.95rem;
+    text-align:center;
+  }
+
+  .actions{
+    display:flex;
+    justify-content:center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  button{
+    font-family: 'Gaegu', sans-serif;
+    font-weight:700;
+    font-size: 1.15rem;
+    border-radius: 10px;
+    padding: 11px 26px;
+    cursor:pointer;
+    border: none;
+    transition: transform 0.12s ease;
+  }
+  button:active{ transform: scale(0.95); }
+  #drawBtn{
+    background: var(--yellow);
+    color: var(--board-dark);
+    box-shadow: 0 3px 0 #b8932c;
+  }
+  #drawBtn:disabled{
+    background: rgba(244,241,228,0.2);
+    color: rgba(244,241,228,0.5);
+    box-shadow:none;
+    cursor:not-allowed;
+  }
+  #resetBtn{
+    background: transparent;
+    color: var(--chalk-dim);
+    border: 1.5px solid rgba(244,241,228,0.35);
+  }
+  #resetBtn:hover{ color: var(--chalk); border-color: var(--chalk); }
+
+  .status{
+    text-align:center;
+    font-size: 0.85rem;
+    color: var(--chalk-dim);
+    min-height: 1.1em;
+    margin-bottom: 16px;
+  }
+
+  .history{
+    border-top: 2px dashed rgba(244,241,228,0.25);
+    padding-top: 16px;
+  }
+  .history-label{
+    font-size: 0.78rem;
+    color: var(--chalk-dim);
+    margin-bottom: 10px;
+    text-align:center;
+  }
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap: 8px;
+    justify-content:center;
+    min-height: 20px;
+  }
+  .chip{
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 0.85rem;
+    font-weight:700;
+    font-family:'Gaegu', sans-serif;
+    color: var(--board-dark);
+    border: 2px dashed rgba(0,0,0,0.15);
+  }
+
+  @media (max-width:420px){
+    h1{ font-size:1.7rem; }
+    .ball{ width:68px; height:68px; font-size:1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+  <div class="board">
+    <h1>번호 뽑기</h1>
+    <p class="sub">설정한 범위 안에서 무작위로 번호를 뽑아요</p>
+
+    <div class="settings">
+      <div class="field">
+        <label>시작 번호</label>
+        <input type="number" id="minNum" value="1">
+      </div>
+      <div class="field">
+        <label>끝 번호</label>
+        <input type="number" id="maxNum" value="24">
+      </div>
+      <div class="field">
+        <label>한 번에 뽑을 개수</label>
+        <div class="count-picker" id="countPicker">
+          <button type="button" class="count-opt selected" data-count="1">1</button>
+          <button type="button" class="count-opt" data-count="2">2</button>
+          <button type="button" class="count-opt" data-count="3">3</button>
+          <button type="button" class="count-opt" data-count="4">4</button>
+          <button type="button" class="count-opt" data-count="5">5</button>
+          <button type="button" class="count-opt" data-count="6">6</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage" id="stage">
+      <p class="placeholder">뽑기 버튼을 눌러보세요</p>
+    </div>
+
+    <div class="actions">
+      <button id="drawBtn">번호 뽑기</button>
+      <button id="resetBtn">초기화</button>
+    </div>
+
+    <p class="status" id="status"></p>
+
+    <div class="history">
+      <p class="history-label">뽑힌 순서</p>
+      <div class="chips" id="chips"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const minInput = document.getElementById('minNum');
+const maxInput = document.getElementById('maxNum');
+const countPicker = document.getElementById('countPicker');
+let selectedCount = 1;
+const drawBtn = document.getElementById('drawBtn');
+const resetBtn = document.getElementById('resetBtn');
+const stage = document.getElementById('stage');
+const chipsEl = document.getElementById('chips');
+const statusEl = document.getElementById('status');
+
+const colors = ['var(--yellow)','var(--blue)','var(--pink)','var(--coral)'];
+
+let drawnSet = new Set();
+let history = [];
+let currentRangeKey = null;
+
+function rangeKey(){
+  return minInput.value + '-' + maxInput.value;
+}
+
+function colorFor(n){
+  return colors[n % colors.length];
+}
+
+function updateStatus(){
+  const min = parseInt(minInput.value, 10);
+  const max = parseInt(maxInput.value, 10);
+  if(isNaN(min) || isNaN(max) || min > max){
+    statusEl.textContent = '시작 번호와 끝 번호를 확인해주세요.';
+    drawBtn.disabled = true;
+    return;
+  }
+  const total = max - min + 1;
+  const remaining = total - drawnSet.size;
+  statusEl.textContent = `전체 ${total}개 중 ${remaining}개 남음`;
+  const need = selectedCount;
+  drawBtn.disabled = remaining < need;
+  if(remaining < need){
+    statusEl.textContent += ' · 뽑을 개수가 남은 번호보다 많아요';
+  }
+}
+
+function renderChips(){
+  chipsEl.innerHTML = '';
+  history.forEach(n => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.style.background = colorFor(n);
+    chip.textContent = n;
+    chipsEl.appendChild(chip);
+  });
+}
+
+function draw(){
+  // range changed since last draw without reset -> keep drawnSet only if same range
+  if(currentRangeKey === null) currentRangeKey = rangeKey();
+  if(rangeKey() !== currentRangeKey){
+    // range changed mid-session: reset automatically
+    drawnSet = new Set();
+    history = [];
+    currentRangeKey = rangeKey();
+    renderChips();
+  }
+
+  const min = parseInt(minInput.value, 10);
+  const max = parseInt(maxInput.value, 10);
+  const need = selectedCount;
+
+  const pool = [];
+  for(let i = min; i <= max; i++){
+    if(!drawnSet.has(i)) pool.push(i);
+  }
+  if(pool.length < need){
+    updateStatus();
+    return;
+  }
+
+  const picked = [];
+  for(let i = 0; i < need; i++){
+    const idx = Math.floor(Math.random() * pool.length);
+    picked.push(pool[idx]);
+    pool.splice(idx, 1);
+  }
+
+  stage.innerHTML = '';
+  picked.forEach((n, i) => {
+    drawnSet.add(n);
+    history.push(n);
+    const ball = document.createElement('div');
+    ball.className = 'ball';
+    ball.style.background = colorFor(n);
+    ball.style.animationDelay = (i * 0.12) + 's';
+    ball.textContent = n;
+    stage.appendChild(ball);
+  });
+
+  renderChips();
+  updateStatus();
+}
+
+function resetAll(){
+  drawnSet = new Set();
+  history = [];
+  currentRangeKey = rangeKey();
+  stage.innerHTML = '<p class="placeholder">뽑기 버튼을 눌러보세요</p>';
+  chipsEl.innerHTML = '';
+  updateStatus();
+}
+
+drawBtn.addEventListener('click', draw);
+resetBtn.addEventListener('click', resetAll);
+[minInput, maxInput].forEach(el => {
+  el.addEventListener('input', updateStatus);
+});
+countPicker.addEventListener('click', (e) => {
+  const btn = e.target.closest('.count-opt');
+  if(!btn) return;
+  countPicker.querySelectorAll('.count-opt').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedCount = parseInt(btn.dataset.count, 10);
+  updateStatus();
+});
+
+currentRangeKey = rangeKey();
+updateStatus();
+</script>
+
+</body>
+</html>
